@@ -1,0 +1,192 @@
+ <!DOCTYPE html>
+<html>
+  <head>
+    <title>Coordenadas 2D a 3D</title>
+    <style>
+      html, body { margin: 0; padding: 0; overflow: hidden; }
+    </style>
+  </head>
+  <body>
+	
+	<script src="js/three.js"></script>
+	
+    <script>
+		var scene, aspect, camera, renderer;
+		var startTime = Date.now();
+		var rotar=false, transladar=false, escalar=false;
+		var controls;
+		var objVectores3 = [];
+		init();
+		animate();
+	
+		function init(){
+			scene = new THREE.Scene();
+			aspect = window.innerWidth / window.innerHeight;
+			camera = new THREE.PerspectiveCamera( 45, aspect, 0.1, 1000);
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+			
+				  
+			var size = 10;
+			var arrowSize = 1;
+			var divisions = size;
+			var origin = new THREE.Vector3( 0, 0, 0 );
+			var x = new THREE.Vector3( 1, 0, 0 );
+			var y = new THREE.Vector3( 0, 1, 0 );
+		  	var z = new THREE.Vector3( 0, 0, 1 );
+			var color1 = new THREE.Color( 0xFFFFFF );
+		  	var color2 = new THREE.Color( 0x333333 );
+		  	var colorR = new THREE.Color( 0xAA3333 );
+		  	var colorG = new THREE.Color( 0x33AA33 );
+		  	var colorB = new THREE.Color( 0x333366 );
+			  	
+			
+		  
+		  	//CREAR LAS GRILLAS
+		  	var axesHelper = new THREE.AxesHelper( size );
+		  	var gridHelperXY = new THREE.GridHelper( size, divisions, color1, color1);
+		  	var gridHelperXZ = new THREE.GridHelper( size, divisions, color2, color2 );
+		  	var gridHelperYZ = new THREE.GridHelper( size, divisions, color2, color2 );
+  
+		  	//ROTARLAS PARA QUE QUEDEN EN EL ESPACIO ADECUADO
+		  	gridHelperXY.rotateOnWorldAxis ( x, THREE.Math.degToRad(90) );
+		 	gridHelperXZ.rotateOnWorldAxis ( y, THREE.Math.degToRad(90) );
+		  	gridHelperYZ.rotateOnWorldAxis ( z, THREE.Math.degToRad(90) );
+  
+		 	 var arrowX = new THREE.ArrowHelper( x, origin, arrowSize, colorR );
+		 	 var arrowY = new THREE.ArrowHelper( y, origin, arrowSize, colorG );
+		 	 var arrowZ = new THREE.ArrowHelper( z, origin, arrowSize, colorB );	
+
+				  
+			
+			var crearPuntos=function(x, y, z, nombre){
+					var name= this.nombre;
+					name = new THREE.Vector3(x, y, z);
+					objVectores3.push(name);					
+					return name;
+			}
+
+			var dibujarPuntos = function (punto, color) {
+
+				var geometria = new THREE.Geometry();
+					 geometria.vertices.push(punto);
+
+				var material = new THREE.PointsMaterial({ color: color, size: 1 });
+				var name = new THREE.Points(geometria, material);
+				scene.add(name);
+				return name;
+			}	
+
+			
+			 op1 = dibujarPuntos(crearPuntos(1, 1, 0, 'p1'), 'red');
+			 op2 = dibujarPuntos(crearPuntos(4, 1, 0, 'p2'), 'red');
+			 op3 = dibujarPuntos(crearPuntos(4, 4, 0, 'p3'), 'red');
+			 op4 = dibujarPuntos(crearPuntos(1, 4, 0, 'p4'), 'red');
+
+			 console.log(objVectores3);
+
+				
+			 puntos = new THREE.Group();
+			 puntos.add(op1, op2, op3, op4);
+
+
+				 
+
+
+
+		  	//AGREGAR A LA ESCENA
+
+		  	scene.add( gridHelperXY );
+		  	scene.add( gridHelperXZ );		
+		  	scene.add( arrowX );	
+		  	scene.add( arrowY );	
+		  	scene.add( arrowZ );
+			scene.add(puntos);	
+
+			alert('PRESIONE --> 1. ROTAR, 2. TRANSLADAR, 3.ESCALAR')
+			
+			var rotar= function(index, theta){
+				var angulo = (Math.PI * theta) / 180;
+				var rx = objVectores3[index].getComponent(2) * Math.sin(angulo) + objVectores3[index].getComponent(0) * Math.cos(angulo);
+				var ry = objVectores3[index].getComponent(1);
+				var rz = objVectores3[index].getComponent(2) * Math.cos(angulo) - objVectores3[index].getComponent(0) * Math.sin(angulo);
+
+				console.log('Rotacion/10',rx, ry, rz);
+				
+
+				Op1rx = dibujarPuntos(crearPuntos(rx, ry, rz, 'rp1'), 'yellow');
+				scene.add(Op1rx);
+			}	
+			var escalar = function (index, esc) {
+				var rx = objVectores3[index].getComponent(0) * esc;
+				var ry = objVectores3[index].getComponent(1) * esc;
+				var rz = objVectores3[index].getComponent(2) * esc;
+
+				console.log('Escala/10', rx, ry, rz);
+
+				Op1rx = dibujarPuntos(crearPuntos(rx, ry, rz, 'ep1'), 'green');
+				scene.add(Op1rx);
+			}	
+			var trasladar = function (index, esc) {
+				var rx = objVectores3[index].getComponent(0) + esc;
+				var ry = objVectores3[index].getComponent(1) + esc;
+				var rz = objVectores3[index].getComponent(2) + esc;
+
+				console.log('Traslacion/10', rx, ry, rz);
+
+				Op1rx = dibujarPuntos(crearPuntos(rx, ry, rz, 'ep1'), 'white');
+				scene.add(Op1rx);
+			}	
+			
+
+		  	
+
+			var onKey = function (event) {
+				switch (event.keyCode) {
+					case 49: //ROTAR
+						rotar(0, 40);
+						rotar(1, 40);
+						rotar(2, 40);
+						rotar(3, 40);
+
+						break;
+					case 50: // TRASLADAR 					
+
+						trasladar(0, 5);
+						trasladar(1, 5);
+						trasladar(2, 5);
+						trasladar(3, 5)
+
+						break;
+					case 51: // ESCALAR
+						escalar(0, 2);
+						escalar(1, 2);
+						escalar(2, 2);
+						escalar(3, 2);
+						break;
+				}
+			};
+
+			document.addEventListener('keydown', onKey, false);
+
+			camera.position.z = -30;
+			camera.position.y = 15;
+			camera.position.x = -5;
+			camera.lookAt(origin);
+			}
+			
+		function animate(){
+			render();
+			requestAnimationFrame( animate );
+		}
+		
+		function render(){
+			var dtime = Date.now()-startTime;
+
+			camera.lookAt( 0, 0, 0 );
+			renderer.render( scene, camera );
+		}
+    </script>
+  </body>
+</html>

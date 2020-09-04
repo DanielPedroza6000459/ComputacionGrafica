@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sistema Solar- Parcial</title>
+        <style>
+            html, body { margin: 0; padding: 0; overflow: hidden; }
+            #info {
+                position: absolute;
+                padding: 10px;
+                width: 100%;
+                text-align: center;
+                color: #ffffff;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="info">PARENT-CHILD<br/>
+            <br/>
+			daniel pedroza<br/>
+        </div>
+	<script src="js/three.js"></script>
+
+	
+    <script>
+		//alert('DANIEL PEDROZA - 6000408')
+		var scene, aspect, camera, renderer;
+		var sol;
+		
+
+		init();
+		animate();
+
+		function init(){
+			scene = new THREE.Scene();
+			aspect = window.innerWidth / window.innerHeight;
+			camera = new THREE.PerspectiveCamera( 45, aspect, 0.1, 1000);
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+			
+
+			//ELEMENTOS DE ESCENA
+
+
+
+			//CREAR LAS GEOMETRÍAS
+			function generarMateriales(colorM){
+					var materialUniversal = new THREE.PointsMaterial({ color: colorM, size: 0.01 });
+					return materialUniversal;
+			}
+			function generaresfera(r) {
+				var geoEsfera = new THREE.Geometry();
+				var resEsfera = 100;
+				for (var i = 0; i < resEsfera; i++) {
+					for (var j = 0; j < resEsfera; j++) {
+						var punto = new THREE.Vector3();
+						punto.x = r * Math.cos((j * 2 * Math.PI) / resEsfera) * Math.sin((i * Math.PI) / resEsfera);
+						punto.y = r * Math.sin((j * 2 * Math.PI) / resEsfera) * Math.sin((i * Math.PI) / resEsfera);
+						punto.z = r * Math.cos((i * Math.PI) / resEsfera);
+						geoEsfera.vertices.push(punto);
+					}
+				}
+				return geoEsfera;
+			}
+
+			 sol= new THREE.Points((generaresfera(3)), generarMateriales('#FFFF00'));
+
+			var mer = new THREE.Points((generaresfera(0.4)), generarMateriales('#800000'));
+				mer.applyMatrix(new THREE.Matrix4().makeTranslation(-4, 0, 0));
+			var ven = new THREE.Points((generaresfera(0.3)), generarMateriales('#808000'));
+				ven.applyMatrix(new THREE.Matrix4().makeTranslation(5, 0, 5));
+			var tierra = new THREE.Points((generaresfera(0.7)), generarMateriales('#0000FF'));
+				tierra.applyMatrix(new THREE.Matrix4().makeTranslation(-7, 0, 3));
+			var marte = new THREE.Points((generaresfera(0.6)), generarMateriales('#FF0000'));
+				marte.applyMatrix(new THREE.Matrix4().makeTranslation(9, 0, 0));
+			var jup = new THREE.Points((generaresfera(1.2)), generarMateriales('red'));
+				jup.applyMatrix(new THREE.Matrix4().makeTranslation(-11, 0, 0));
+			var saturn = new THREE.Points((generaresfera(2)), generarMateriales('#008000'));
+				saturn.applyMatrix(new THREE.Matrix4().makeTranslation(15, 0, 9));
+			var uran = new THREE.Points((generaresfera(1.5)), generarMateriales('#00FFFF'));
+				uran.applyMatrix(new THREE.Matrix4().makeTranslation(-20, 0, -10));
+			var nep = new THREE.Points((generaresfera(0.6)), generarMateriales('#800080'));
+				nep.applyMatrix(new THREE.Matrix4().makeTranslation(23, 0, -18));
+			var plut = new THREE.Points((generaresfera(0.3)), generarMateriales('#008000'));
+				plut.applyMatrix(new THREE.Matrix4().makeTranslation(-24, 0,2));
+			var luna = new THREE.Points((generaresfera(0.1)), generarMateriales('#00000FF'));
+				luna.applyMatrix(new THREE.Matrix4().makeTranslation(1, 0, 0));
+				tierra.add(luna);
+
+			scene.add(sol);
+			sol.add(mer);
+			sol.add(ven);
+			sol.add(tierra);
+			sol.add(marte);
+			sol.add(jup);
+			sol.add(saturn);
+			sol.add(uran);
+			sol.add(nep);
+			sol.add(plut);
+			
+
+
+		
+			camera.position.y = 10;
+		  	camera.position.z = 60;
+		  	camera.lookAt( origin );
+
+			
+
+			renderer.render(scene, camera);
+			
+			}
+
+    function animate() {
+        render();
+        requestAnimationFrame( animate );
+		sol.rotation.y += 0.005;
+		
+    }
+
+    function render(){
+
+		
+        camera.lookAt( 0, 0, 0 );
+        renderer.render( scene, camera );
+    }
+    </script>
+  </body>
+</html>
