@@ -1,0 +1,294 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Multiples Camaras</title>
+			<style>
+				html,
+				body {
+					margin: 0;
+					padding: 0;
+					overflow: hidden;
+				}
+			
+				#info {
+					position: absolute;
+					padding: 10px;
+					width: 100%;
+					text-align: center;
+					color: 'black';
+				}
+			</style>
+        
+    </head>
+    <body>
+		<div id="info">MANEJO DE CAMARAS<br />
+			LLENE LA JAULA CON ESFERAS<br />
+			UTILICE EL BOTON PARA LLENAR ESFERAS ----> <br />
+			USE EL MOUSE PARA INTERACTUAR CON LA CAMARA
+		</div>
+
+	<script src="js/three.min.js"></script>
+	<script src='js/libs/dat.gui.min.js'></script>
+	<script src="js/controls/OrbitControls.js"></script>
+    <script>
+        
+		var scene, aspect, camera, views, renderer, controls, helper;
+        var windowWidth, windowHeight;
+		objDatGuiOptios = {};
+		var objVectores3 = [];
+        
+		var views = [
+					// CAMARA TRES
+				{
+					left:0.5 ,bottom: 0.5,width: 0.5,height: 0.5,
+					background: new THREE.Color('#999999'),
+					eye: [0, 20, 60],
+					up: [0, 0, 0],
+					
+					updateCamera: function ( camera, scene ) {
+					
+					camera.position.x = 0.05;
+					camera.lookAt( scene.position );
+
+					}
+				},
+					// CAMARA DOS
+				{
+					left: 0.5,bottom: 0,width: 0.5,height: 0.5,
+					background: new THREE.Color( 'white' ),
+					eye: [0, 50, 200],
+					up: [ 0, 0, 1 ],
+					fov: 60,
+					updateCamera: function ( camera, scene ) {
+					  camera.lookAt( camera.position );
+					}
+				},
+					// camara uno
+       			 { 
+            		left: 0,bottom: 0,width:0.5,height:1,
+					background: new THREE.Color( '#454545'),
+					eye: [ 40, 40, 40 ],
+					up: [ 0, 0, 1],
+					fov: objDatGuiOptios.fov,
+					updateCamera: function ( camera, scene) {
+						//camera.fov = objDatGuiOptios.fov;
+						camera.near = objDatGuiOptios.near;
+						camera.fov = objDatGuiOptios.fov;
+						camera.far = objDatGuiOptios.fov;
+						camera.lookAt( scene.position );
+						//helper.updateMatrix();
+					}
+        		}
+			];
+
+		
+		init();
+		animate();
+        
+		function init(){
+            
+			scene = new THREE.Scene();
+			aspect = window.innerWidth / window.innerHeight;
+			renderer = new THREE.WebGLRenderer();
+			
+
+			objDatGuiOptios = {
+				activarCamaras:false,
+
+				options: 'Perspective',
+
+				fov:100,
+				
+				near:30,
+
+				far:30,
+				camara: new THREE.PerspectiveCamera(objDatGuiOptios.fov, window.innerWidth / window.innerHeight, objDatGuiOptios.near, objDatGuiOptios.far),
+
+				crearEsf: function () {
+
+					for (let index = 0; index < 50; index++) {
+						r = Math.random() * 3;
+						var geoEsfera = new THREE.Geometry();
+						var zTemp = 0;
+						var resXY = 20.0;
+						var resZ = 20.0;
+						for (var i = 0; i < resZ; i++) {
+							for (var j = 0; j < resXY; j++) {
+								var punto = new THREE.Vector3();
+								punto.x = r * Math.cos((j * 2 * Math.PI) / resXY) * Math.sin((i * Math.PI) / resZ);
+								punto.y = r * Math.sin((j * 2 * Math.PI) / resXY) * Math.sin((i * Math.PI) / resZ);
+								punto.z = r * Math.cos((i * Math.PI) / resZ);
+								geoEsfera.vertices.push(punto);
+							}
+						}
+						var matLinea = new THREE.LineBasicMaterial();
+						matLinea.color.setRGB(Math.random() * 100 / 100, Math.random() * 100 / 100, Math.random() * 100 / 100);
+
+						var esfera = new THREE.Line(geoEsfera, matLinea);
+
+						esfera.position.set(
+							Math.random() * (14 + 14) - 14,
+							Math.random() * (28 - 1) + 1,
+							Math.random() * (14 + 14) - 14
+						);
+
+						scene.add(esfera);
+
+
+					}
+				},
+				
+				añadirEsf: function () {
+					objVectores3.push(objDatGuiOptios.crearEsf());
+					esferaTemp = objVectores3[objVectores3.length - 1];
+				},
+
+
+			}
+				  			
+			function camarasGui(){
+				console.log(objDatGuiOptios.fov);
+				for (var ii = 0; ii < views.length; ++ii) {
+					//CAMARA TRES
+					if (ii == 2) {
+						var view = views[ii];
+						//var camera3 = new THREE.PerspectiveCamera(view.fov, window.innerWidth / window.innerHeight, objDatGuiOptios.near, objDatGuiOptios.far);
+						var camera3=objDatGuiOptios.camara;
+						document.body.appendChild(renderer.domElement);
+						
+						camera3.position.fromArray(view.eye);
+
+						view.camera = camera3;
+						helper = new THREE.CameraHelper(camera3);
+						scene.add(helper);
+						controls = new THREE.OrbitControls(camera3, renderer.domElement);
+					} else {
+						var view = views[ii];
+						var camera = new THREE.PerspectiveCamera(view.fov, window.innerWidth / window.innerHeight, 1, 10000);
+						//var camera =  new THREE.OrthographicCamera(window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 10, 1000);
+						camera.position.fromArray(view.eye);
+						camera.up.fromArray(view.up);
+						view.camera = camera;
+					}
+				}
+			}
+			
+			camarasGui();
+			
+							  
+			var size = 10;
+			var arrowSize = 1;
+			//var origin = new THREE.Vector3( 0, 0, 0 );
+			
+
+			function crearAll() {
+				var x = new THREE.Vector3(1, 0, 0);
+				var y = new THREE.Vector3(0, 1, 0);
+				var z = new THREE.Vector3(0, 0, 1);
+				var color2 = new THREE.Color('black');
+				//CREAR LAS GRILLAS PARA EL ESCENARIO
+				var gridHelperXZ =  new THREE.GridHelper(30, 5, color2, color2);
+
+				var gridHelperXZ2 = new THREE.GridHelper(30, 5, color2, color2);
+				gridHelperXZ2.position.y = 30;
+
+				var gridHelperXY =  new THREE.GridHelper(30, 5, color2, color2);
+				gridHelperXY.position.z = 15;
+				gridHelperXY.position.y = 15;
+
+				var gridHelperYZ =  new THREE.GridHelper(30, 5, color2, color2);
+				gridHelperYZ.position.x = 15;
+				gridHelperYZ.position.y = 15;
+
+				var gridHelperXY2 = new THREE.GridHelper(30, 5, color2, color2);
+				gridHelperXY2.position.z = -15;
+				gridHelperXY2.position.y = 15;
+
+				var gridHelperYZ2 = new THREE.GridHelper(30, 5, color2, color2);
+				gridHelperYZ2.position.x = -15;
+				gridHelperYZ2.position.y = 15;
+
+
+
+				gridHelperXY.rotateOnWorldAxis(x, THREE.Math.degToRad(90));
+				gridHelperXZ.rotateOnWorldAxis(y, THREE.Math.degToRad(90));
+				gridHelperXY2.rotateOnWorldAxis(x, THREE.Math.degToRad(90));
+				gridHelperYZ2.rotateOnWorldAxis(z, THREE.Math.degToRad(90));
+				gridHelperYZ.rotateOnWorldAxis(z, THREE.Math.degToRad(90));
+
+
+				var jaula = new THREE.Group();
+				jaula.add(gridHelperXY, gridHelperXZ2, gridHelperXY2, gridHelperXZ, gridHelperYZ, gridHelperYZ2);
+
+
+				
+				var datGuiAgregarEsf = new dat.GUI();
+				datGuiAgregarEsf.add(objDatGuiOptios, 'crearEsf').name('Añadir esferas');
+				datGuiAgregarEsf.add(objDatGuiOptios, 'fov', 0, 300).step(0.001).name('FOV').onChange(objDatGuiOptios.actualizarCamara);
+				datGuiAgregarEsf.add(objDatGuiOptios, 'near', 0, 100).step(1).name('NEAR');
+				datGuiAgregarEsf.add(objDatGuiOptios, 'far', 0, 1000).step(1).name('FAR');
+				tipoDeCamara=datGuiAgregarEsf.add(objDatGuiOptios, 'options', [ 'Perspective', 'Ortogonal']).name('CAMERA').listen();
+				tipoDeCamara.onChange(function(value){
+					objDatGuiOptios.camara= new THREE.OrthographicCamera
+				})
+				
+				scene.add(jaula);
+			}
+
+			crearAll();
+			
+			renderer.render( scene, camera );
+           
+			}
+
+			function updateSize() {
+
+				//if ( windowWidth != window.innerWidth || windowHeight != window.innerHeight ) {
+
+					windowWidth = window.innerWidth;
+					windowHeight = window.innerHeight;
+
+					renderer.setSize( windowWidth, windowHeight );
+
+				//}
+
+			}
+    function animate() {
+        render();
+        requestAnimationFrame( animate );
+    }
+    
+    function render(){
+       
+       updateSize();
+
+				for ( var ii = 0; ii < views.length; ++ ii ) {
+
+					var view = views[ ii ];
+					var camera = view.camera;
+					//view.camera.position.x =30;
+
+					view.updateCamera( camera, scene );
+
+					var left = Math.floor( windowWidth * view.left );
+					var bottom = Math.floor( windowHeight * view.bottom );
+					var width = Math.floor( windowWidth * view.width );
+					var height = Math.floor( windowHeight * view.height );
+
+					renderer.setViewport( left, bottom, width, height );
+					renderer.setScissor( left, bottom, width, height );
+					renderer.setScissorTest( true );
+					renderer.setClearColor( view.background );
+
+					camera.aspect = width / height;
+					camera.updateProjectionMatrix();
+
+					renderer.render( scene, camera );
+
+				}
+    }
+    </script>
+        
+
+  </body>
+</html>
