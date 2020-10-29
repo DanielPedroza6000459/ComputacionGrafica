@@ -1,0 +1,68 @@
+
+    body {
+        width: 100%;
+        height: 100%;
+    }
+
+    body {
+        background-color: #ffffff;
+        margin: 0;
+        overflow: hidden;
+        font-family: arial;
+    }
+
+    #blocker {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    header{
+        margin: 100px auto;
+        width: 1200px;
+        height: 230px;
+        background-color: red;
+    }
+    .contenedor{
+        width: 200px;
+        height: 230px;
+        float: left;
+    }
+    #uno{
+        background-color: rgb(208, 101, 3);
+    }
+    #dos{
+        background-color: rgb(233, 101, 30);
+    }
+    #tres{
+        background-color: rgb(208, 101, 60);
+    }
+    #cuatro{
+        background-color: rgb(208, 101, 90);
+    }
+    #cinco{
+        background-color: rgb(208, 101, 120);
+    }
+    #seis{
+        background-color: rgb(208, 101, 150);
+    }
+
+    #instructions {
+        width: 100%;
+        height: 100%;
+        display: -webkit-box;
+        display: -moz-box;
+        display: box;
+        -webkit-box-orient: horizontal;
+        -moz-box-orient: horizontal;
+        box-orient: horizontal;
+        -webkit-box-pack: center;
+        -moz-box-pack: center;
+        box-pack: center;
+        -webkit-box-align: center;
+        -moz-box-align: center;
+        box-align: center;
+        color: #ffffff;
+        text-align: center;
+        cursor: pointer;
+    }

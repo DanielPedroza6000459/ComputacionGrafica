@@ -1,0 +1,464 @@
+<html lang="en">
+
+<head>
+    <title>three.js - pointerlock controls</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+
+<body>
+    <header>
+        
+    </header>
+
+
+
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/libs/stats.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/PointerLockControls.js"></script>
+    <script type="text/javascript" src="js/physijs/physi.js"></script>
+    
+    <!-- <script type="text/javascript" src="js/three.min.js"></script>
+    <script type="module" src="js/three.module.js"></script>
+    <script type="text/javascript" src="js/stats.min.js"></script>
+    <script type="module" src="js/controls/PointerLockControls.js"></script>
+    <script type="text/javascript" src="js/physijs/physi.js"></script> -->
+
+    <div id="blocker">
+
+        <div id="instructions">
+            <span style="font-size:40px">Click to play</span>
+            <br />
+            (W, A, S, D = Move, SPACE = Jump, MOUSE = Look around)
+        </div>
+
+    </div>
+    <script>
+        class Funciones{
+            constructor(){}
+
+            static generarMundo(){
+                const cellSize = 2;
+                const cell = new Uint8Array(cellSize * cellSize * cellSize);
+                const geometry = new THREE.BoxBufferGeometry(1, 1, 1);
+                const material = new THREE.MeshPhongMaterial({ color: 'green' });
+
+                for (let y = 0; y < cellSize; ++y) {
+                    for (let z = 0; z < cellSize; ++z) {
+                        for (let x = 0; x < cellSize; ++x) {
+                            const offset = y * cellSize * cellSize +
+                                z * cellSize +
+                                x;
+                            const block = cell[offset];
+                            const mesh = new Physijs.BoxMesh(geometry, material);
+                            mesh.position.set(x, y, z);
+                            scene.add(mesh);
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script >
+        Physijs.scripts.worker = '../js/physijs_worker.js';
+        Physijs.scripts.ammo = '../js/ammo.js';
+        var camera, scene, renderer;
+        var geometry, material, mesh;
+        var controls;
+        var objects = [];
+        var raycaster;
+        var blocker = document.getElementById('blocker');
+        var instructions = document.getElementById('instructions');
+        // https://www.html5rocks.com/en/tutorials/pointerlock/intro/
+        var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+        if (havePointerLock) {
+            var element = document.body;
+            var pointerlockchange = function (event) {
+                if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
+                    controlsEnabled = true;
+                    controls.enabled = true;
+                    blocker.style.display = 'none';
+                } else {
+                    controls.enabled = false;
+                    blocker.style.display = '-webkit-box';
+                    blocker.style.display = '-moz-box';
+                    blocker.style.display = 'box';
+                    instructions.style.display = '';
+                }
+            };
+            var pointerlockerror = function (event) {
+                instructions.style.display = '';
+            };
+            // Hook pointer lock state change events
+            document.addEventListener('pointerlockchange', pointerlockchange, false);
+            document.addEventListener('mozpointerlockchange', pointerlockchange, false);
+            document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
+            document.addEventListener('pointerlockerror', pointerlockerror, false);
+            document.addEventListener('mozpointerlockerror', pointerlockerror, false);
+            document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
+            instructions.addEventListener('click', function (event) {
+                instructions.style.display = 'none';
+                // Ask the browser to lock the pointer
+                element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+                if (/Firefox/i.test(navigator.userAgent)) {
+                    var fullscreenchange = function (event) {
+                        if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element) {
+                            document.removeEventListener('fullscreenchange', fullscreenchange);
+                            document.removeEventListener('mozfullscreenchange', fullscreenchange);
+                            element.requestPointerLock();
+                        }
+                    };
+                    document.addEventListener('fullscreenchange', fullscreenchange, false);
+                    document.addEventListener('mozfullscreenchange', fullscreenchange, false);
+                    element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+                    element.requestFullscreen();
+                } else {
+                    element.requestPointerLock();
+                }
+            }, false);
+        } else {
+            instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
+        }
+       
+        var controlsEnabled = false;
+        var moveForward = false;
+        var moveBackward = false;
+        var moveLeft = false;
+        var moveRight = false;
+        var canJump = false;
+        var prevTime = performance.now();
+        var velocity = new THREE.Vector3();
+		var direction = new THREE.Vector3();
+        var voxelTransparente,geoVoxel,matVoxel;
+        var cuboFinal, geoVoxelp2 ,matVoxel2;
+        var plano,raycast,mousePosX,mousePosY,mousePos;
+        var interseccion, objetos=[], objetoInterseccion;
+        var textureLadrillo, materialLadrillo;
+
+        init();
+        animate();
+
+
+        function init() {
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+            // scene = new THREE.Scene();
+            scene = new Physijs.Scene;
+            
+           
+           
+            var light = new THREE.HemisphereLight(0xeeeeff, 0x777788, 0.75);
+            light.position.set(0.5, 1, 0.75);
+            scene.add(light);
+
+            // AVATAR
+            // var geoAvatar = new THREE.BoxGeometry(2, 20, 2);
+            // var materialAvatar = Physijs.createMaterial(new THREE.MeshBasicMaterial({color: 'red' }), 0.9, 0.8);
+            // var avatar = new Physijs.BoxMesh(geoAvatar, materialAvatar, 0);
+            // avatar.position.set(1, 0, 1);
+            // scene.add(avatar);
+          
+            // camera.add(avatar);
+            controls = new THREE.PointerLockControls(camera);
+            scene.add(controls.getObject());
+           
+           
+           
+            var onKeyDown = function (event) {
+                switch (event.keyCode) {
+                    case 38: // up
+                    case 87: // w
+                        moveForward = true;
+                        break;
+                    case 37: // left
+                    case 65: // a
+                        moveLeft = true; break;
+                    case 40: // down
+                    case 83: // s
+                        moveBackward = true;
+                        break;
+                    case 39: // right
+                    case 68: // d
+                        moveRight = true;
+                        break;
+                    case 32: // space
+                        if (canJump === true) velocity.y += 200;
+                        canJump = false;
+                        break;
+                }
+            };
+            var onKeyUp = function (event) {
+                switch (event.keyCode) {
+                    case 38: // up
+                    case 87: // w
+                        moveForward = false;
+                        break;
+                    case 37: // left
+                    case 65: // a
+                        moveLeft = false;
+                        break;
+                    case 40: // down
+                    case 83: // s
+                        moveBackward = false;
+                        break;
+                    case 39: // right
+                    case 68: // d
+                        moveRight = false;
+                        break;
+                }
+            };
+            
+            document.addEventListener('keydown', onKeyDown, false);
+            document.addEventListener('keyup', onKeyUp, false);
+            raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 10);
+            raycast = new THREE.Raycaster();
+            
+            // textura cubos
+            textureLadrillo = new THREE.TextureLoader().load("images/ladrillo.png");
+            textureLadrillo.wrapS = THREE.RepeatWrapping;
+            textureLadrillo.wrapT = THREE.RepeatWrapping;
+            textureLadrillo.repeat.set(4, 4);
+            // floor
+            var textureFloor = new THREE.TextureLoader().load("images/cesped.jpg");
+            textureFloor.wrapS = THREE.RepeatWrapping;
+            textureFloor.wrapT = THREE.RepeatWrapping;
+            textureFloor.repeat.set(64, 64);
+            var geoCuboPlano = new THREE.BoxGeometry(300, 0.01, 300);
+            material =Physijs.createMaterial(new THREE.MeshBasicMaterial({ map: textureFloor}), 0.9, 0.8);
+            plano = new Physijs.BoxMesh(geoCuboPlano, material, 0);
+            scene.add(plano);
+
+            
+
+            // cubo guia
+
+            materialLadrillo = new THREE.MeshStandardMaterial({ map: textureLadrillo });
+            materiaGuia = new THREE.MeshStandardMaterial({ color: 0x009c0b, metalness: 0.5, roughness: 0.1, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+            matVoxel = new THREE.MeshStandardMaterial({ visible: false });
+            geoVoxel = new THREE.BoxGeometry(10, 10, 2);
+            voxelTransparente = new THREE.Mesh(geoVoxel,  materiaGuia);
+            voxelTransparente.position.set(0, 5, 0);
+            voxelTransparente.__dirtyPosition = true;
+
+            
+
+            // generar mundo
+
+            // Funciones.generarMundo();
+
+            scene.add(plano);
+            scene.add(voxelTransparente);
+            objetos.push(plano);
+
+
+
+            //
+            renderer = new THREE.WebGLRenderer();
+            renderer.setClearColor(0xffffff);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+            document.addEventListener('mousemove', onDocumentMouseMove, false);
+            document.addEventListener('mousedown', onDocumentMouseDown, false);
+            //
+            window.addEventListener('resize', onWindowResize, false);
+
+        }
+        
+        function animate() {
+            
+            requestAnimationFrame(animate);
+            if (controlsEnabled) {
+                raycaster.ray.origin.copy(controls.getObject().position);
+                raycaster.ray.origin.y -= 10;
+                
+                var intersections = raycaster.intersectObjects(objects);
+                var onObject = intersections.length > 0;
+                var isOnObject = intersections.length > 0;
+                var time = performance.now();
+                var delta = (time - prevTime) / 1000;
+
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize(); // this ensures consistent movements in all directions
+                
+                if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+
+                if (onObject === true) {
+                    velocity.y = Math.max(0, velocity.y);
+                    canJump = true;
+                }
+
+                controls.moveRight(- velocity.x * delta);
+                controls.moveForward(- velocity.z * delta);
+
+                controls.getObject().position.y += (velocity.y * delta); // new behavior
+
+                if (controls.getObject().position.y < 10) {
+                    velocity.y = 0;
+                    controls.getObject().position.y = 10;
+                    canJump = true;
+                }
+                prevTime = time;
+            }
+            renderer.render(scene, camera);
+            scene.simulate(); // run physics
+
+        }
+        
+        function onDocumentMouseMove(e) {
+                e.preventDefault();
+                mousePosX = (event.clientX / window.innerWidth) * 2 - 1;
+                mousePosY = - (event.clientY / window.innerHeight) * 2 + 1;
+                mousePos = new THREE.Vector2(mousePosX, mousePosY);
+                raycast.setFromCamera(mousePos, camera);
+                interseccion = raycast.intersectObjects(objetos);
+
+                if (interseccion.length > 0) {
+                    objetoInterseccion = interseccion[0];
+                    if (objetoInterseccion.face.normal.y == -1) {
+                        voxelTransparente.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        voxelTransparente.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxelTransparente.position.y = voxelTransparente.position.y + 4.5;
+
+                    }
+                    if (objetoInterseccion.face.normal.y == 1) {
+                        voxelTransparente.position.copy(objetoInterseccion.point);
+                        voxelTransparente.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxelTransparente.position.y = voxelTransparente.position.y + 4.5;
+                    }
+                    if (objetoInterseccion.face.normal.x == -1) {
+                        voxelTransparente.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        voxelTransparente.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxelTransparente.position.y = voxelTransparente.position.y + 4.5;
+                    }
+                    if (objetoInterseccion.face.normal.x == 1) {
+                        voxelTransparente.position.copy(objetoInterseccion.point);
+                        voxelTransparente.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxelTransparente.position.y = voxelTransparente.position.y + 4.5;
+                    }
+                    if (objetoInterseccion.face.normal.z == -1) {
+                        voxelTransparente.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        voxelTransparente.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxelTransparente.position.y = voxelTransparente.position.y + 4.5;
+                    }
+                    if (objetoInterseccion.face.normal.z == 1) {
+                        voxelTransparente.position.copy(objetoInterseccion.point);
+                        voxelTransparente.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxelTransparente.position.y = voxelTransparente.position.y + 4.5;
+                    }
+                }
+                
+            }
+
+        function onDocumentMouseDown(e) {
+                e.preventDefault();
+                mousePosX = (event.clientX / window.innerWidth) * 2 - 1;
+                mousePosY = - (event.clientY / window.innerHeight) * 2 + 1;
+                mousePos = new THREE.Vector2(mousePosX, mousePosY);
+                console.log(mousePos);
+                raycast.setFromCamera(mousePos, camera);
+                interseccion = raycast.intersectObjects(objetos);
+
+                if (interseccion.length > 0) {
+
+
+                    // var materialCubo1= Physijs.createMaterial(new THREE.MeshBasicMaterial({ color: '' }),  );
+                    var materialCubo1= Physijs.createMaterial(new THREE.MeshBasicMaterial({map: textureLadrillo}), 0.9, 0.1);
+
+                    var Ficha = new Physijs.BoxMesh(
+                        new THREE.CubeGeometry(10, 10, 2),
+                        materialCubo1
+                    );
+                    Ficha.material = materialLadrillo;
+                    Ficha.applyMatrix4(new THREE.Matrix4().makeScale(1, 1, 1));
+
+                    var voxel = new THREE.Mesh(geoVoxel, matVoxel);
+                    objetoInterseccion = interseccion[0];
+
+                    if (objetoInterseccion.face.normal.y == -1) {
+                        Ficha.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        Ficha.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        Ficha.position.y = Ficha.position.y +4.9;
+
+                        voxel.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        voxel.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxel.position.y = voxel.position.y + 4.9;
+                    }
+                    if (objetoInterseccion.face.normal.y == 1) {
+                        Ficha.position.copy(objetoInterseccion.point);
+                        Ficha.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        Ficha.position.y = Ficha.position.y +4.9;
+
+
+                        voxel.position.copy(objetoInterseccion.point);
+                        voxel.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxel.position.y = voxel.position.y + 4.9;
+                    }
+                    if (objetoInterseccion.face.normal.x == -1) {
+                        Ficha.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        Ficha.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        Ficha.position.y = Ficha.position.y + 4.9;
+
+                        // Ficha.position.y = Ficha.position.y - 0.75;
+
+                        voxel.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        voxel.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxel.position.y = voxel.position.y + 4.9;
+                    }
+                    if (objetoInterseccion.face.normal.x == 1) {
+                        Ficha.position.copy(objetoInterseccion.point);
+                        Ficha.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        Ficha.position.y = Ficha.position.y + 4.9;
+
+                        // Ficha.position.y = Ficha.position.y - 0.75;
+
+                        voxel.position.copy(objetoInterseccion.point);
+                        voxel.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxel.position.y = voxel.position.y + 4.9;
+                    }
+                    if (objetoInterseccion.face.normal.z == -1) {
+                        Ficha.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        Ficha.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        Ficha.position.y = Ficha.position.y + 4.9;
+
+                        // Ficha.position.y = Ficha.position.y - 0.75;
+
+                        voxel.position.copy(objetoInterseccion.point).add(objetoInterseccion.face.normal);
+                        voxel.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxel.position.y = voxel.position.y + 4.9;
+                    }
+                    if (objetoInterseccion.face.normal.z == 1) {
+                        Ficha.position.copy(objetoInterseccion.point);
+                        Ficha.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        Ficha.position.y = Ficha.position.y + 4.9;
+
+                        // Ficha.position.y = Ficha.position.y - 0.75;
+
+                        voxel.position.copy(objetoInterseccion.point);
+                        voxel.position.divideScalar(1).floor().multiplyScalar(1).addScalar(0.5);
+                        voxel.position.y = voxel.position.y + 4.9;
+                    }
+                    scene.add(voxel);
+                    scene.add(Ficha);
+                    objetos.push(voxel);
+                }
+                // render();
+            }
+
+        function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+    </script>
+</body>
+
+</html>
