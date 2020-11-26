@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Proyecto final</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="preconnect" href="https://fonts.gstatic.com">
+		<link href="https://fonts.googleapis.com/css2?family=Goldman:wght@700&display=swap" rel="stylesheet">
+		<link type="text/css" rel="stylesheet" href="main.css">
+	</head>
+	<body>
+		<div id="blocker">
+		
+			<div id="instructions" class="interfaz">
+				<span style="font-size:120px">PLAY GAME</span>
+				<br>
+				<br>
+				<b><h2 class="play">Click para empezar</h2></b> <br>
+				Muevete usando WASD <br>
+				Vuela mirando hacia el suelo y presinando SPACE<br>
+				Usa la rueda del raton para cambiar figuras <br>
+				Elimina cubos con LeftClick+Shift <br>
+				<br>
+				DANIEL PEDROZA 6000459 <br>
+				DAVID MORALES  6000408 <br>
+				JUAN GOMES 6000313
+			</div>
+		
+		</div>
+		<script src="https://threejs.org/build/three.min.js"></script>
+        <script src="https://threejs.org/examples/js/libs/stats.min.js"></script>
+		<script src="https://threejs.org/examples/js/controls/PointerLockControls.js"></script>
+		<script type="text/javascript" src="js/physijs/physi.js"></script>
+		<script src="js/csg.js"></script>
+		<script src="js/THREE.CSG.js"></script>
+		<script>
+			class operacionesCSG {
+					static arcoCSG() {
+						//CREAR LAS GEOMETRÍAS
+						var xCube = 400, yCube = 450, zCube = 300;
+						var boxGeometry = new THREE.BoxGeometry(xCube, yCube, zCube);
+						var box2Geometry = new THREE.BoxGeometry(xCube + 100, yCube / 3, zCube / 3);
+						var box3Geometry = new THREE.BoxGeometry(xCube / 3, yCube / 2, zCube + 100);
+						var box4Geometry = new THREE.BoxGeometry(xCube + 15, 20, zCube + 15);
+						var box5Geometry = new THREE.BoxGeometry(xCube + 35, 15, zCube + 35);
+						var box6Geometry = new THREE.BoxGeometry(xCube + 70, 25, zCube + 70);
+						var cylinderGeo = new THREE.CylinderGeometry(zCube / 6, zCube / 6, xCube + 100, 30);
+						var cylinder2Geo = new THREE.CylinderGeometry(xCube / 6, xCube / 6, zCube + 100, 30);
+						// --------------------
+						var cube = new THREE.Mesh(boxGeometry);
+						var entradaPeq = new THREE.Mesh(box2Geometry);
+						var entradaGn = new THREE.Mesh(box3Geometry);
+						var marco1 = new THREE.Mesh(box4Geometry);
+						var marco2 = marco1.clone();
+						var marco3 = marco1.clone();
+						var marco4 = marco1.clone();
+						var marco5 = marco1.clone();
+						var marco6 = new THREE.Mesh(box5Geometry);
+						var marco7 = marco6.clone();
+						var marco8 = marco6.clone();
+						var marco9 = new THREE.Mesh(box6Geometry);
+						var arcoPeq = new THREE.Mesh(cylinderGeo);
+						var arcoGn = new THREE.Mesh(cylinder2Geo);
+						entradaPeq.translateY(-yCube / 3);
+						entradaGn.translateY(-yCube / 4);
+						marco1.translateY(-yCube / 2 + 15);
+						marco2.translateY(-1);
+						marco3.translateY(xCube / 6 + 10);
+						marco4.translateY(yCube / 4);
+						marco5.translateY(yCube / 2);
+						marco6.translateY(yCube / 4 + 15);
+						marco7.translateY(-yCube / 2 + 7.5);
+						marco8.translateY(yCube / 2 + 15);
+						marco9.translateY(yCube / 4 + 30);
+						arcoPeq.translateY(-zCube / 4);
+						arcoPeq.rotateZ(-Math.PI / 2);
+						arcoGn.rotateX(-Math.PI / 2);
+						// //CONVERTIR A CSG
+						var cubeCSG = THREE.CSG.fromMesh(cube);
+						var entradaPeqCSG = THREE.CSG.fromMesh(entradaPeq);
+						var entradaGnCSG = THREE.CSG.fromMesh(entradaGn);
+						var arcoPeqCSG = THREE.CSG.fromMesh(arcoPeq);
+						var arcoGnCSG = THREE.CSG.fromMesh(arcoGn);
+						var marco1CSG = THREE.CSG.fromMesh(marco1);
+						var marco2CSG = THREE.CSG.fromMesh(marco2);
+						var marco3CSG = THREE.CSG.fromMesh(marco3);
+						var marco4CSG = THREE.CSG.fromMesh(marco4);
+						var marco5CSG = THREE.CSG.fromMesh(marco5);
+						var marco6CSG = THREE.CSG.fromMesh(marco6);
+						var marco7CSG = THREE.CSG.fromMesh(marco7);
+						var marco8CSG = THREE.CSG.fromMesh(marco8);
+						var marco9CSG = THREE.CSG.fromMesh(marco9);
+						// //APLICAR LAS OPERACIONES
+						var resul1 = cubeCSG.union(marco1CSG).union(marco2CSG).union(marco3CSG).union(marco4CSG).union(marco5CSG).union(marco6CSG).union(marco7CSG).union(marco8CSG).union(marco9CSG);
+						var resul2 = resul1.subtract(entradaGnCSG).subtract(entradaPeqCSG).subtract(arcoPeqCSG).subtract(arcoGnCSG);
+						// //CONVERTIR A MALLA DE THREE JS NUEVAMENTE
+						var arcoDelTriunfo = THREE.CSG.toMesh(resul2);
+						arcoDelTriunfo.material = new THREE.MeshLambertMaterial({ color: 'gray' });
+						arcoDelTriunfo.translateY(215);
+						arcoDelTriunfo.translateZ(-800);
+						arcoDelTriunfo.castShadow = true;
+						arcoDelTriunfo.receiveShadow = true;
+						scene.add(arcoDelTriunfo);
+					}
+					static carro(){
+							
+						function neumaticos() {
+							var torusGeometry = new THREE.TorusGeometry(0.7, 0.3, 42, 32);
+							var sphereGeometry = new THREE.SphereGeometry(0.7, 32, 32);
+							var CylinderGeometry = new THREE.CylinderGeometry(0.1, 0.05, 0.3, 20);
+							var CylinderGeometryDos = new THREE.CylinderGeometry(0.1, 0.2, 0.2, 20);
+							var CylinderGeometryTres = new THREE.CylinderGeometry(0.18, 0.18, 0.2, 20);
+							var Conogeometry = new THREE.ConeGeometry(0.1, 0.1, 32);
+							var boxgeometry = new THREE.BoxGeometry(1.4, 1.4, 0.1);
+
+							var material2 = new THREE.MeshStandardMaterial({
+								color: 'gray', metalness: 0.8, roughness: 1,
+								transparent: false, opacity: 1
+							})
+							var torus = new THREE.Mesh(torusGeometry);
+							var sphre = new THREE.Mesh(sphereGeometry);
+							var Cylinder = new THREE.Mesh(CylinderGeometry);
+							var CylinderDos = new THREE.Mesh(CylinderGeometryDos);
+							var CylinderTres = new THREE.Mesh(CylinderGeometryTres);
+							var Cone = new THREE.Mesh(Conogeometry);
+							var box = new THREE.Mesh(boxgeometry);
+							CylinderDos.rotateX(Math.PI / 2);
+							CylinderTres.rotateX(Math.PI / 2);
+							Cylinder.translateY(-0.5);
+							Cone.translateY(-0.2);
+							var coneCSG = THREE.CSG.fromMesh(Cone);
+							var cylinderCSG = THREE.CSG.fromMesh(Cylinder);
+							var boxCSG = THREE.CSG.fromMesh(box);
+							var result1 = coneCSG.union(cylinderCSG);
+							var forma = THREE.CSG.toMesh(result1);
+							var forma1 = forma.clone();
+							forma1.rotateZ(Math.PI / 4);
+							var forma2 = forma.clone();
+							forma2.rotateZ(Math.PI / 2);
+							var forma3 = forma.clone();
+							forma3.rotateZ(3 * Math.PI / 4);
+							var forma4 = forma.clone();
+							forma4.rotateZ(Math.PI / 1);
+							var forma5 = forma.clone();
+							forma5.rotateZ(5 * Math.PI / 4);
+							var forma6 = forma.clone();
+							forma6.rotateZ(3 * Math.PI / 2);
+							var forma7 = forma.clone();
+							forma7.rotateZ(7 * Math.PI / 4);
+							var formaCSG = THREE.CSG.fromMesh(forma);
+							var forma1CSG = THREE.CSG.fromMesh(forma1);
+							var forma2CSG = THREE.CSG.fromMesh(forma2);
+							var forma3CSG = THREE.CSG.fromMesh(forma3);
+							var forma4CSG = THREE.CSG.fromMesh(forma4);
+							var forma5CSG = THREE.CSG.fromMesh(forma5);
+							var forma6CSG = THREE.CSG.fromMesh(forma6);
+							var forma7CSG = THREE.CSG.fromMesh(forma7);
+							var cylinderDosCSG = THREE.CSG.fromMesh(CylinderDos);
+							var cylinderTresCSG = THREE.CSG.fromMesh(CylinderDos);
+							var result2 = boxCSG.subtract(formaCSG).subtract(forma1CSG).subtract(forma2CSG).subtract(forma3CSG).subtract(forma4CSG).subtract(forma5CSG).subtract(forma6CSG).subtract(forma7CSG).subtract(cylinderDosCSG);
+							var torusCSG = THREE.CSG.fromMesh(torus);
+							var sphereCSG = THREE.CSG.fromMesh(sphre);
+
+							var result3 = torusCSG.subtract(sphereCSG).union(result2);
+							var llantaEntera = THREE.CSG.toMesh(result3);
+							llantaEntera.material = material2;
+							scene.add(llantaEntera);
+							return llantaEntera;
+						}
+						function extrude() {
+							var curve2D = [];
+							curve2D[0] = new THREE.Vector2(0.8219900345244, -0.4960033218252)
+							curve2D[1] = new THREE.Vector2(0.8909950172622, 0.2017137258569)
+							curve2D[2] = new THREE.Vector2(0.6456439675279, 0.6770813847172)
+							curve2D[3] = new THREE.Vector2(0.2316140711012, 0.9531013156683)
+							curve2D[4] = new THREE.Vector2(-0.6194473826649, 0.9454340953641)
+							curve2D[5] = new THREE.Vector2(-1.0718133806126, 0.5390714192416)
+							curve2D[6] = new THREE.Vector2(-1.2328250070007, 0.0483693197729)
+							curve2D[7] = new THREE.Vector2(-1.1868216851755, -0.3809950172622)
+							curve2D[8] = new THREE.Vector2(-1.4628416161267, -0.3656605766538)
+							curve2D[9] = new THREE.Vector2(-1.8001993095114, -0.373327796958)
+							curve2D[10] = new THREE.Vector2(-1.9228748343786, -0.3426589157412)
+							curve2D[11] = new THREE.Vector2(-2.1375570028961, -0.0896406457027)
+							curve2D[12] = new THREE.Vector2(-2.2372308668507, 0.2630514882904)
+							curve2D[13] = new THREE.Vector2(-2.2295636465465, 0.8304257908011)
+							curve2D[14] = new THREE.Vector2(-2.0685520201584, 1.213786806011)
+							curve2D[15] = new THREE.Vector2(-2, 1.5)
+							curve2D[16] = new THREE.Vector2(-1.860358125695, 1.5034889709233)
+							curve2D[17] = new THREE.Vector2(-1.8393055778959, 1.6207817372324)
+							curve2D[18] = new THREE.Vector2(-1.8964482076363, 1.6869468874581)
+							curve2D[19] = new THREE.Vector2(-2.010733467117, 1.74108201037)
+							curve2D[20] = new THREE.Vector2(-1.7159977979299, 1.7771720923113)
+							curve2D[21] = new THREE.Vector2(-1.3701345126593, 1.768149571826)
+							curve2D[22] = new THREE.Vector2(-1.2618642668355, 1.7140144489141)
+							curve2D[23] = new THREE.Vector2(-1.1175039390703, 1.5726616279774)
+							curve2D[24] = new THREE.Vector2(-0.7626181333144, 1.6478492986884)
+							curve2D[25] = new THREE.Vector2(-0.1430717266558, 1.8824348313067)
+							curve2D[26] = new THREE.Vector2(0.5967749531405, 2.0929603092975)
+							curve2D[27] = new THREE.Vector2(1.5321095767853, 2.2704032121755)
+							curve2D[28] = new THREE.Vector2(2.7531573491319, 2.3726584443424)
+							curve2D[29] = new THREE.Vector2(3.1561632641429, 2.342583376058)
+							curve2D[30] = new THREE.Vector2(3.3245836465355, 2.3095008009452)
+							curve2D[31] = new THREE.Vector2(4.2749558043226, 1.918524913248)
+							curve2D[32] = new THREE.Vector2(5.0478850592316, 1.5185265050655)
+							curve2D[33] = new THREE.Vector2(5.4689360152132, 1.5365715460361)
+							curve2D[34] = new THREE.Vector2(6.5907360622214, 1.4343163138691)
+							curve2D[35] = new THREE.Vector2(7.6, 1.2)
+							curve2D[36] = new THREE.Vector2(8.2869699134615, 0.9260476598628)
+							curve2D[37] = new THREE.Vector2(8.3741876114863, 0.8568750028087)
+							curve2D[38] = new THREE.Vector2(8.4583978026826, 0.7305597160142)
+							curve2D[39] = new THREE.Vector2(8.5245629529083, 0.613266949705)
+							curve2D[40] = new THREE.Vector2(8.5486230075358, 0.4358240468271)
+							curve2D[41] = new THREE.Vector2(8.536592980222, 0.2012385142088)
+							curve2D[42] = new THREE.Vector2(8.536592980222, 0)
+							curve2D[43] = new THREE.Vector2(8.5967431167908, -0.1145497027774)
+							curve2D[44] = new THREE.Vector2(8.6328331987321, -0.1716923325178)
+							curve2D[45] = new THREE.Vector2(8.6448632260459, -0.2679325510279)
+							curve2D[46] = new THREE.Vector2(8.5756905689918, -0.3340977012536)
+							curve2D[47] = new THREE.Vector2(8.3170449817459, -0.3762027968517)
+							curve2D[48] = new THREE.Vector2(7.6, -0.4)
+							curve2D[49] = new THREE.Vector2(7.613288383891, -0.0513920593802)
+							curve2D[50] = new THREE.Vector2(7.5531382473222, 0.3816889239152)
+							curve2D[51] = new THREE.Vector2(7.435845481013, 0.592214401906)
+							curve2D[52] = new THREE.Vector2(7.2824626327626, 0.7576272774701)
+							curve2D[52] = new THREE.Vector2(6.9426143611488, 0.9380776871765)
+							curve2D[53] = new THREE.Vector2(6.5636685007654, 0.9922128100885)
+							curve2D[54] = new THREE.Vector2(6.1757001198966, 0.9110101257206)
+							curve2D[55] = new THREE.Vector2(5.9170545326508, 0.7365747296711)
+							curve2D[56] = new THREE.Vector2(5.7426191366013, 0.4989816902243)
+							curve2D[57] = new THREE.Vector2(5.631341383949, 0.2042460210372)
+							curve2D[58] = new THREE.Vector2(5.6253263702921, -0.1927448803169)
+							curve2D[59] = new THREE.Vector2(5.6674314658902, -0.412292878793)
+							curve2D[60] = new THREE.Vector2(5.7576566707435, -0.4664280017049)
+							curve2D[61] = new THREE.Vector2(3.5681916996392, -0.4814655358471)
+							curve2D[62] = new THREE.Vector2(0.9727133066955, -0.4995105768178)
+
+							var curve22D = [];
+							curve22D[0] = new THREE.Vector2(4.463041514856, 1.477428477351)
+							curve22D[1] = new THREE.Vector2(3.0378611117408, 2.2441922030036)
+							curve22D[2] = new THREE.Vector2(1.7918700575553, 2.1400123489747)
+							curve22D[3] = new THREE.Vector2(1.7001917860099, 2.0858388248797)
+							curve22D[4] = new THREE.Vector2(1.675188621043, 1.9899933591731)
+							curve22D[5] = new THREE.Vector2(1.8043716400388, 1.5607723605741)
+							curve22D[6] = new THREE.Vector2(3.3420662855052, 1.4899300598344)
+
+							var curve23D = [];
+							curve23D[0] = new THREE.Vector2(1.3834850297621, 1.6441162437972)
+							curve23D[1] = new THREE.Vector2(1.3126427290225, 1.8983150876277)
+							curve23D[2] = new THREE.Vector2(0.9667656136466, 1.8233055927269)
+							curve23D[3] = new THREE.Vector2(0.8250810121673, 1.6607850204418)
+							var shape = new THREE.Shape();
+							shape.moveTo(0.8219900345244, -0.4960033218252)
+							var shape2 = new THREE.Shape();
+							shape2.moveTo(4.463041514856, 1.477428477351)
+							var shape3 = new THREE.Shape();
+							shape3.moveTo(1.3834850297621, 1.6441162437972)
+							shape.splineThru(curve2D);
+							shape2.splineThru(curve22D);
+							shape3.splineThru(curve23D);
+							shape.holes.push(shape2);
+							shape.holes.push(shape3);
+							var material = new THREE.LineBasicMaterial({ color: 'aqua' });
+							var resolution = 50;
+							var points = shape.getPoints(resolution);
+							var geometry = new THREE.BufferGeometry().setFromPoints(points);
+							var curveObject = new THREE.Line(geometry, material);
+							var extrudeSettings = {
+								steps: 2,
+								amount: 5,
+								bevelEnabled: false,
+							};
+							var geometryExt = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+							var materialExt = new THREE.MeshStandardMaterial({
+								color: 'aqua',
+							});
+							var mesh = new THREE.Mesh(geometryExt, materialExt);
+							return mesh;
+						}
+
+						var curvasCarro = extrude();
+						neumaticoDerInf = neumaticos();
+						neumaticoDerInf.position.set(-0, 0, 0);
+
+						neumaticoIzqInf = neumaticoDerInf.clone();
+						neumaticoIzqInf.position.set(-0, 0, 5);
+
+						neumaticoDerSup = neumaticoDerInf.clone();
+
+						neumaticoIzqSup = neumaticoDerInf.clone();
+						neumaticoIzqSup.position.set(0, 0, 5);
+
+						var sphereGeometry = new THREE.SphereGeometry(0.01, 32, 32);
+						var sphre = new THREE.Mesh(sphereGeometry);
+						sphre.position.set(6.7, 0, 0);
+
+						var material1 = new THREE.MeshStandardMaterial({
+							color: 'red', metalness: 0.5, roughness: 0.1,
+							transparent: true, opacity: 0.7
+						})
+						var material2 = new THREE.MeshStandardMaterial({ color: 'black', roughness: 1 });
+						var material3 = new THREE.MeshStandardMaterial({ color: 'white', roughness: 1 });
+
+						var geometry = new THREE.CylinderGeometry(0.2, 0.2, 1, 32);
+						var cylinder = new THREE.Mesh(geometry, material2);
+						cylinder.rotateZ(Math.PI / 2);
+						cylinder.translateX(0);
+						cylinder.translateY(1.8);
+						cylinder.translateZ(2.3);
+
+						var cylinder2 = cylinder.clone();
+						cylinder2.translateZ(0.55);
+
+						var spGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+						var sphere2 = new THREE.Mesh(spGeometry, material1);
+						sphere2.position.set(-2, 1, 1);
+						var sphere3 = sphere2.clone();
+						sphere3.position.set(-2, 1, 4);
+
+						sphere4 = new THREE.Mesh(spGeometry, material3);
+						sphere4.position.set(8, 1, 0.5);
+
+						sphere5 = sphere4.clone();
+						sphere5.position.set(8, 1, 4.5);
+
+						sphere6 = new THREE.Mesh(spGeometry, material3);
+						sphere6.position.set(-2, 1, 4.6);
+
+						sphere7 = sphere6.clone();
+						sphere7.position.set(-2, 1, .4);
+
+						var Placageometry = new THREE.BoxGeometry(0.5, 0.5, 1);
+						var Placamaterial = new THREE.MeshBasicMaterial({ color: 'yellow' });
+						var placa = new THREE.Mesh(Placageometry, Placamaterial);
+
+						placa.position.set(-2, 0.5, 2.6);
+
+						var placaDel = placa.clone();
+						placaDel.position.set(8.3, 0.1, 2.6);
+
+						curvasCarro.add(placa);
+						curvasCarro.add(placaDel);
+						curvasCarro.add(cylinder);
+						curvasCarro.add(cylinder2);
+						curvasCarro.add(sphere2);
+						curvasCarro.add(sphere3);
+						curvasCarro.add(sphere4);
+						curvasCarro.add(sphere5);
+						curvasCarro.add(sphere6);
+						curvasCarro.add(sphere7);
+						curvasCarro.add(neumaticoDerInf);
+						curvasCarro.add(neumaticoIzqInf);
+						sphre.add(neumaticoDerSup);
+						sphre.add(neumaticoIzqSup);
+						curvasCarro.add(sphre);
+						curvasCarro.translateY(1.1);
+						curvasCarro.rotateY(-Math.PI / 2)
+						curvasCarro.applyMatrix(new THREE.Matrix4().makeScale(6, 6, 6));
+						scene.add(curvasCarro);
+					}
+				}
+			class complementos{
+				static crearCalleSurNorte(bloques, px, pz) {
+					var geometry = new THREE.BoxGeometry(100, 1, 100); //calle
+					var geometry2 = new THREE.BoxGeometry(10, 10, 100);  // bordes calle
+					var geometry3 = new THREE.BoxGeometry(10, 2, 50);  // lineas amarilals
+					var cube = new THREE.Mesh(geometry, material);
+					var cube2 = new THREE.Mesh(geometry2, new THREE.MeshLambertMaterial({color:'gray'}));
+					var lineas = new THREE.Mesh(geometry3, materialLineas);
+					cube2.position.set(50, 5, 0);
+					var cube3 = cube2.clone();
+					cube3.position.set(-50, 5, 0);
+					// cube.add(cube2);
+					// cube.add(cube3);
+					cube.add(lineas);
+					for (let index = 0; index < bloques; index++) {
+						var temp = cube.clone();
+						temp.translateZ(index * -100);
+						cube.add(temp);
+					}
+					cube.translateX(px);
+					cube.translateZ(pz);
+					scene.add(cube);
+				}
+				static crearCalleEsteOeste(bloques, px, pz) {
+					var geometry = new THREE.BoxGeometry(100, 1, 100); //calle
+					var geometry2 = new THREE.BoxGeometry(10, 10, 100);  // bordes calle
+					var geometry3 = new THREE.BoxGeometry(10, 2, 50);  // lineas amarilals
+					var cube = new THREE.Mesh(geometry, material);
+					var cube2 = new THREE.Mesh(geometry2, new THREE.MeshLambertMaterial({ color: 'gray' }));
+					var lineas = new THREE.Mesh(geometry3, materialLineas);
+					cube2.position.set(50, 5, 0);
+					var cube3 = cube2.clone();
+					cube3.position.set(-50, 5, 0);
+					// cube.add(cube2);
+					// cube.add(cube3);
+					cube.add(lineas);
+					for (let index = 0; index < bloques; index++) {
+						var temp = cube.clone();
+						temp.translateZ(index * -100);
+						cube.add(temp);
+					}
+					cube.rotateY(Math.PI / 2);
+					cube.translateX(pz);
+					cube.translateZ(px);
+					scene.add(cube);
+					return cube;
+				}
+       			static aviso() {
+					const geometry = new THREE.CylinderGeometry(2, 2, 50, 32);
+					const material = new THREE.MeshLambertMaterial({ color: 'gray' });
+					const cylinder = new THREE.Mesh(geometry, material);
+					cylinder.translateY(25)
+
+					const cylinder2 = cylinder.clone();
+					cylinder2.translateX(50)
+					var texture= new THREE.TextureLoader().load("images/notice.jpg");
+					const geometry2 = new THREE.PlaneGeometry(50, 30, 32);
+					const material2 = new THREE.MeshLambertMaterial({ map: texture , side: THREE.DoubleSide });
+					const plane = new THREE.Mesh(geometry2, material2);
+					plane.position.set(25, 35, 0);
+
+					plane.castShadow = true;
+					var aviso= new THREE.Group();
+					aviso.add(plane);
+					aviso.add(cylinder);
+					aviso.add(cylinder2);
+					aviso.rotateY(-Math.PI/2);
+					aviso.position.set(100, 0, 100);
+					scene.add(aviso);
+				}
+				static playerPosition(){
+					const geometryplayer = new THREE.PlaneGeometry(200, 150, 32);
+					var texture = new THREE.TextureLoader().load("images/player.jpg");
+					const materialplayer = new THREE.MeshBasicMaterial({ map: texture });
+					var punto = new THREE.Mesh(geometryplayer, materialplayer);
+					punto.position.set(0, 100, 0);
+					punto.rotateX(-Math.PI / 2);
+					return punto;
+				}
+				
+		}
+		</script>
+		<script>
+				var texture = new THREE.TextureLoader().load("images/rocks.jpg");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set(4, 4);
+				var material = new THREE.MeshLambertMaterial({ map: texture });
+				materialLineas = new THREE.MeshLambertMaterial({ color: 'yellow' });
+				var raycaster;
+				var blocker = document.getElementById('blocker');
+				var instructions = document.getElementById('instructions');
+				// https://www.html5rocks.com/en/tutorials/pointerlock/intro/
+				var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+				if (havePointerLock) {
+					var element = document.body;
+					var pointerlockchange = function (event) {
+						if (document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element) {
+							controlsEnabled = true;
+							controls.enabled = true;
+							blocker.style.display = 'none';
+						} else {
+							controls.enabled = false;
+							blocker.style.display = '-webkit-box';
+							blocker.style.display = '-moz-box';
+							blocker.style.display = 'box';
+							instructions.style.display = '';
+						}
+					};
+					var pointerlockerror = function (event) {
+						instructions.style.display = '';
+					};
+					// Hook pointer lock state change events
+					document.addEventListener('pointerlockchange', pointerlockchange, false);
+					document.addEventListener('mozpointerlockchange', pointerlockchange, false);
+					document.addEventListener('webkitpointerlockchange', pointerlockchange, false);
+					document.addEventListener('pointerlockerror', pointerlockerror, false);
+					document.addEventListener('mozpointerlockerror', pointerlockerror, false);
+					document.addEventListener('webkitpointerlockerror', pointerlockerror, false);
+					instructions.addEventListener('click', function (event) {
+						instructions.style.display = 'none';
+						// Ask the browser to lock the pointer
+						element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+						if (/Firefox/i.test(navigator.userAgent)) {
+							var fullscreenchange = function (event) {
+								if (document.fullscreenElement === element || document.mozFullscreenElement === element || document.mozFullScreenElement === element) {
+									document.removeEventListener('fullscreenchange', fullscreenchange);
+									document.removeEventListener('mozfullscreenchange', fullscreenchange);
+									element.requestPointerLock();
+								}
+							};
+							document.addEventListener('fullscreenchange', fullscreenchange, false);
+							document.addEventListener('mozfullscreenchange', fullscreenchange, false);
+							element.requestFullscreen = element.requestFullscreen || element.mozRequestFullscreen || element.mozRequestFullScreen || element.webkitRequestFullscreen;
+							element.requestFullscreen();
+						} else {
+							element.requestPointerLock();
+						}
+					}, false);
+				} else {
+					instructions.innerHTML = 'Your browser doesn\'t seem to support Pointer Lock API';
+				}
+				Physijs.scripts.worker = '../js/physijs_worker.js';
+				Physijs.scripts.ammo = '../js/ammo.js';
+				var marco, neumaticoIzqSup, neumaticoIzqInf, neumaticoDerSup, neumaticoDerInf, sphere4, sphere5, sphere6, sphere7;
+				var controlsEnabled = false;
+				var moveForward = false;
+				var moveBackward = false;
+				var moveLeft = false;
+				var moveRight = false;
+				var canJump = false;
+				var prevTime = performance.now();
+				var velocity = new THREE.Vector3();
+				var direction = new THREE.Vector3();
+				var plano, raycast, mousePosX, mousePosY, mousePos;
+				var interseccion, objetos = [], objetoInterseccion;
+				var scene, aspect, camera, minimap, renderer, controls;
+				var keyboard = {};
+				var USE_WIREFRAME = false;
+				var upArrow = false;
+				var downArrow = false;
+				var leftArrow = false;
+				var rightArrow = false;
+				var objects = [];
+				var plane;
+				var mouse, isShiftDown = false;
+				var index = 1;
+				var rollOverMesh, rollOverMaterial;
+				var cubeGeo, cubeMaterial, textureLadrillo;
+				var tamX=50, tamY=50, tamZ=50;
+				var insetHeight, insetWidth;
+				var objects = [];
+				var insetHeight, insetWidth;
+				var origin = new THREE.Vector3(0, 0, 0), minimapX, minimapY, minimapZ, player;
+			init();
+			animate();
+			onWindowResize();
+			// render();
+
+			function init() {
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 0, 100, 500 );
+				minimap = new THREE.OrthographicCamera(- 1000, 1000, 1000, -1000, 0.1, 10000);
+				minimap.position.set(0, 50, 0);
+				minimap.lookAt(origin);
+				scene = new Physijs.Scene;
+				scene.background = new THREE.Color( 0xf0f0f0 );
+				renderer = new THREE.WebGLRenderer({ antialias: true});
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+				renderer.shadowMap.enabled = true;
+				document.body.appendChild(renderer.domElement);
+				controls = new THREE.PointerLockControls(camera);
+				scene.add(controls.getObject());
+				var onKeyDown = function (event) {
+					switch (event.keyCode) {
+						case 38: // up
+						case 87: // w
+							moveForward = true;
+							break;
+						case 37: // left
+						case 65: // a
+							moveLeft = true; break;
+						case 40: // down
+						case 83: // s
+							moveBackward = true;
+							break;
+						case 39: // right
+						case 68: // d
+							moveRight = true;
+							break;
+						case 32: // space
+							if (canJump === true) velocity.y += 200;
+							canJump = false;
+							break;
+					}
+				};
+				var onKeyUp = function (event) {
+					switch (event.keyCode) {
+						case 38: // up
+						case 87: // w
+							moveForward = false;
+							break;
+						case 37: // left
+						case 65: // a
+							moveLeft = false;
+							break;
+						case 40: // down
+						case 83: // s
+						moveBackward = false;
+						break;
+						case 39: // right
+						case 68: // d
+						moveRight = false;
+						break;
+					}
+				};
+				document.addEventListener('keydown', onKeyDown, false);
+				document.addEventListener('keyup', onKeyUp, false);
+				raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 10);
+				raycast = new THREE.Raycaster();
+				//IMPORTANTE
+				controls.enableKeys = false;
+
+				// lights
+				var light = new THREE.SpotLight( 0xffffff );
+				light.position.set( 3000, 1000, 3000 );
+				light.castShadow = true;
+				scene.add(light );
+				var Slight = new THREE.SpotLight( 0xffffff );
+				Slight.position.set( 3000, 1000, -3000 );
+				Slight.castShadow = true;
+				scene.add(Slight );
+
+				var ambientLight = new THREE.AmbientLight( 0x606060 );
+				scene.add( ambientLight );
+				// suelo
+				var geometry = new THREE.PlaneBufferGeometry( 4000, 4200 );
+				geometry.rotateX( - Math.PI / 2 );
+				var textureFloor = new THREE.TextureLoader().load("images/cesped.jpg");
+				textureFloor.wrapS = THREE.RepeatWrapping;
+				textureFloor.wrapT = THREE.RepeatWrapping;
+				textureFloor.repeat.set(100, 100);
+				materialPlane= Physijs.createMaterial(new THREE.MeshLambertMaterial({ map: textureFloor }), 0.9, 0.8);
+				plane = new Physijs.BoxMesh( geometry, materialPlane, 0 );
+				plane.receiveShadow = true;
+				scene.add( plane );
+				objects.push( plane );
+				// player
+				player=complementos.playerPosition();
+				scene.add(player);
+				// AVISO
+				complementos.aviso();
+				//CARRO
+				operacionesCSG.carro();
+
+				// ARCO DEL TRIUNFO
+				operacionesCSG.arcoCSG();
+				// CALLES
+				var calle1NorteSur =  complementos.crearCalleSurNorte(9, 0, 1500);
+				var calle2OesteEste = complementos.crearCalleEsteOeste(9, 1700, 400);
+				var calle3SurNorte =  complementos.crearCalleSurNorte(9, -1000, 1500);
+				// cielo
+				const loader = new THREE.TextureLoader();
+				const textureSky = loader.load(
+					'images/sky.jpg',
+					() => {
+						const rt = new THREE.WebGLCubeRenderTarget(textureSky.image.height);
+						rt.fromEquirectangularTexture(renderer, textureSky);
+						scene.background = rt;
+					});
+				// cubo real
+				texture = new THREE.TextureLoader().load("images/ladrillo.png");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set(1, 1);
+				cubeMaterial = new THREE.MeshLambertMaterial({map: texture });
+				cubeGeo = seleccionFigura(null);
+				raycaster = new THREE.Raycaster();
+				mouse = new THREE.Vector2();
+				// cubo transparente
+				rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
+				rollOverMesh = new THREE.Mesh( cubeGeo, rollOverMaterial );
+				scene.add( rollOverMesh );
+
+				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+				document.addEventListener( 'mousedown', onDocumentMouseDown, false );
+				document.addEventListener( 'keydown', onDocumentKeyDown, false );
+				document.addEventListener( 'keyup', onDocumentKeyUp, false );
+				window.addEventListener( 'resize', onWindowResize, false );
+				animate();
+				document.body.appendChild(renderer.domElement);
+			}
+		function cuboTransparente(){
+			scene.remove(rollOverMesh)
+			rollOverMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, opacity: 0.5, transparent: true });
+			rollOverMesh = new THREE.Mesh(cubeGeo, rollOverMaterial);
+			scene.add(rollOverMesh);
+		}
+		function EventosRueda(){
+			document.addEventListener('wheel', function (eF) {
+			eF.preventDefault();
+			}, { passive: false });
+			const activarRueda = (event) => {
+				if (event.deltaY < 0) {
+					index--;
+					if (index == 0) {
+						index = 9;
+					}
+					seleccionFigura(index);
+					cuboTransparente()
+				} else {
+					index++;
+					if (index == 9) {
+						index = 1;
+					}
+					seleccionFigura(index)
+					cuboTransparente()
+				}
+			}
+			const elF = document.querySelector('div');
+			document.onwheel = activarRueda;
+		}
+		function seleccionFigura(n){
+			if(n==null){
+				tamX = 10, tamY = 10, tamZ = 10;
+				cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+				texture = new THREE.TextureLoader().load("images/ladrillo.png");
+				texture.wrapS = THREE.RepeatWrapping;
+				texture.wrapT = THREE.RepeatWrapping;
+				texture.repeat.set(1, 1);
+				cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+			}else{
+				switch (n){
+					case 1: //CUBO NORMAL
+						tamX = 10, tamY = 10, tamZ = 10;
+						cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/ladrillo.png");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(1, 1);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+
+						break;
+					case 2: //CUBO NORMAL
+						tamX = 50, tamY = 50, tamZ = 10;
+						cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/ladrillo.png");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(5, 5);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+
+						break;
+					case 3: //CUBO NORMAL
+						tamX = 10, tamY = 50, tamZ = 50;
+						cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/ladrillo.png");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(5, 5);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+
+						break;
+					case 4: //MURO DE 4X3 BLOQUES NORMALES
+						tamX = 10, tamY = 10, tamZ = 30;
+						cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/ladrillo.png");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(1, 1);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+						break;
+					case 5: //MURO DE 4X3 BLOQUES NORMALES
+						tamX = 30, tamY = 10, tamZ = 10;
+						cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/ladrillo.png");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(1, 1);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+						break;
+					case 6: //COLUMNA CUADRADA
+						tamX= 10, tamY=50, tamZ= 10;
+						cubeGeo = new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/rocks.jpg");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(1, 5);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+						break;
+					case 7: // COLUMNA CILINDRICA
+						tamX = 5, tamY =50, tamZ =5 ;
+						cubeGeo =  new THREE.CylinderGeometry(tamX, tamZ, tamY, 32);
+						texture = new THREE.TextureLoader().load("images/tronco.jpg");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(1, 1);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+						break;
+					case 8: //SUELO DE 
+						tamX = 10, tamY =0.1, tamZ = 50;
+						cubeGeo =  new THREE.BoxBufferGeometry(tamX, tamY, tamZ);
+						texture = new THREE.TextureLoader().load("images/madera.png");
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+						texture.repeat.set(1, 2);
+						cubeMaterial = new THREE.MeshLambertMaterial({ map: texture });
+						// cubeGeo.rotateX(Math.PI/2);
+						break;
+				}
+			}
+			return cubeGeo;
+		}
+		function animate(){
+            EventosRueda()
+			requestAnimationFrame(animate);
+			
+			minimapX=camera.position.x;
+			minimapY=camera.position.y;
+			minimapZ=camera.position.z;
+
+            player.position.set(minimapX, 400, minimapZ);
+
+			minimap.position.set(minimapX,470, minimapZ);
+			minimap.lookAt(minimapX, 0,minimapZ);
+			
+            if (controlsEnabled) {
+                raycaster.ray.origin.copy(controls.getObject().position);
+                raycaster.ray.origin.y -= 10;
+                
+                var intersections = raycaster.intersectObjects(objects);
+                var onObject = intersections.length > 0;
+                var isOnObject = intersections.length > 0;
+                var time = performance.now();
+                var delta = (time - prevTime) / 200;
+                
+                velocity.z -= velocity.z * 10.0 * delta;
+                velocity.x -= velocity.x * 10.0 * delta;
+                velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+                
+                direction.z = Number(moveForward) - Number(moveBackward);
+                direction.x = Number(moveRight) - Number(moveLeft);
+                direction.normalize(); // this ensures consistent movements in all directions
+                
+                if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+                if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+                
+                if (onObject === true) {
+                    velocity.y = Math.max(0, velocity.y);
+                    canJump = true;
+                }
+                
+                controls.moveRight(- velocity.x * delta);
+                controls.moveForward(- velocity.z * delta);
+                
+                controls.getObject().position.y += (velocity.y * delta); // new behavior
+                
+                if (controls.getObject().position.y < 10) {
+                    velocity.y = 0;
+                    controls.getObject().position.y = 10;
+                    canJump = true;
+                }
+                prevTime = time;
+            }
+            
+            renderer.setClearColor(0x000000);
+
+			renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+
+			renderer.render(scene, camera);
+
+			renderer.setClearColor(0x333333);
+
+			renderer.clearDepth();
+
+			renderer.setScissorTest(true);
+
+			renderer.setScissor(16, window.innerHeight - insetHeight - 16, insetWidth, insetHeight);
+			renderer.setViewport(16, window.innerHeight - insetHeight - 16, insetWidth, insetHeight);
+
+			renderer.render(scene, minimap);
+
+			renderer.setScissorTest(false);	
+			scene.simulate();
+		}
+		function keyDown(event) {
+			keyboard[event.keyCode] = true;
+		}
+		function keyUp(event) {
+			keyboard[event.keyCode] = false;
+		}
+			document.addEventListener('keydown', keyDown);
+			document.addEventListener('keyup', keyUp);
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			
+			insetWidth = window.innerHeight / 3;
+			insetHeight = window.innerHeight / 2;
+			
+			minimap.aspect = insetWidth / insetHeight;
+			minimap.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+		}
+			function onDocumentMouseMove( event ) {
+				event.preventDefault();
+				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				raycaster.setFromCamera( mouse, camera );
+				var intersects = raycaster.intersectObjects( objects );
+				if ( intersects.length > 0 ) {
+					var intersect = intersects[ 0 ];
+					rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
+					rollOverMesh.position.divideScalar( 10 ).floor().multiplyScalar( 10).addScalar( tamY/2 );
+				}
+			}
+			function onDocumentMouseDown( event ) {
+				event.preventDefault();
+				mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+				raycaster.setFromCamera( mouse, camera );
+				var intersects = raycaster.intersectObjects( objects );
+				if ( intersects.length > 0 ) {
+					var intersect = intersects[ 0 ];
+					// delete cube
+					if ( isShiftDown ) {
+						if ( intersect.object !== plane ) {
+							scene.remove( intersect.object );
+							objects.splice( objects.indexOf( intersect.object ), 1 );
+						}
+					} else {
+						var voxel = new Physijs.BoxMesh( cubeGeo, cubeMaterial );
+						voxel.position.copy( intersect.point ).add( intersect.face.normal );
+						voxel.position.divideScalar(10).floor().multiplyScalar(10).addScalar(tamY/2 );
+						scene.add( voxel );
+						objects.push( voxel );
+					}
+				}
+			}
+			function onDocumentKeyDown( event ) {
+				switch ( event.keyCode ) {
+					case 16: isShiftDown = true; break;
+				}
+			}
+			function onDocumentKeyUp( event ) {
+				switch ( event.keyCode ) {
+					case 16: isShiftDown = false; break;
+				}
+			}
+		</script>
+	</body>
+</html>
